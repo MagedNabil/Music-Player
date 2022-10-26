@@ -24,8 +24,14 @@ const currentProgress = document.getElementById("current-progress");
 
 //index for songs
 let index = 0;
+//index for albume number
 let album = 1;
+//handel first next song error
 let firstclick = 0;
+//handel albume list view
+let albumView = 0;
+let isopen = false;
+
 
 
 
@@ -194,6 +200,15 @@ const setSong = (arrayIndex = 0) => {
     audio.onloadedmetadata = () => {
         maxDuration.innerText = timeFormatter(audio.duration);
     };
+
+    if (isopen == true) {
+        playlistContainer.classList.add("hide");
+        albumView = 1;
+        albumeListHandler();
+    } else {
+        playlistContainer.classList.add("hide");
+    }
+
 };
 
 // set Folders
@@ -238,11 +253,11 @@ repeatButton.addEventListener("click", () => {
     if (repeatButton.classList.contains("active")) {
         repeatButton.classList.remove("active");
         audio.loop = false;
-        console.log("repeat off");
+        // console.log("repeat off");
     } else {
         repeatButton.classList.add("active");
         audio.loop = true;
-        console.log("repeat on");
+        // console.log("repeat on");
     }
 });
 
@@ -309,11 +324,11 @@ shuffleButton.addEventListener("click", () => {
     if (shuffleButton.classList.contains("active")) {
         shuffleButton.classList.remove("active");
         loop = true;
-        console.log("shuffle off");
+        // console.log("shuffle off");
     } else {
         shuffleButton.classList.add("active");
         loop = false;
-        console.log("shuffle on");
+        // console.log("shuffle on");
     }
 });
 
@@ -376,11 +391,40 @@ const playSong = (albumNum) => {
     };
 
     playAudio();
-
 }
+
+//handel keep the albume list open after close or chossing a song while albume list is opend
+albumeListHandler = () => {
+    if (albumView == 1 && isopen == true) {
+        foldersContainer.classList.remove("hide");
+        playlistContainer.classList.add("hide");
+    } else {
+        foldersContainer.classList.add("hide");
+        playlistContainer.classList.remove("hide");
+    }
+}
+//set song view after select the album
+setSongView = (albumNum) => {
+    let albumName = `Album${albumNum}`;
+    let { name, link, artist, image } = songs[albumName][0];
+    audio.src = link;
+    songName.innerHTML = name;
+    songArtist.innerHTML = artist;
+    songImage.src = image;
+    //display duration when metadata loads
+    audio.onloadedmetadata = () => {
+        maxDuration.innerText = timeFormatter(audio.duration);
+    };
+    foldersContainer.classList.add("hide");
+    playlistContainer.classList.remove("hide");
+    albumView = 0;
+    albumeListHandler();
+}
+
 
 //Creates playlist depends on selected album
 const initializePlaylist = (albumNum = 1) => {
+    albumView = 1;
     playlistSongs.innerHTML = "";
     let albumName = `Album${albumNum}`;
     let albumLength = getAlbumLength(albumNum);
@@ -407,9 +451,10 @@ resetIndex = () => {
 }
 // Creates folders
 const initializeFolerslist = () => {
+    albumView = 1;
     for (let i = 1; i <= numberOfAlbums; i++) {
         const [albumName, num] = setFolder(i)
-        folders.innerHTML += `<li class='playlistSong' onclick='setAlbum(${i}); playSong(${i}); setCounter(0); resetIndex();'>
+        folders.innerHTML += `<li class='playlistSong' onclick='setAlbum(${i}); setSongView(${i});albumeListHandler(); setCounter(0); resetIndex();'>
             <div class="playlist-song-details">
                 <span id="playlist-song-name">
                 ${albumName}
@@ -425,21 +470,32 @@ const initializeFolerslist = () => {
 //display playlist
 playlistButton.addEventListener("click", () => {
     playlistContainer.classList.remove("hide");
+    albumView = 1;
+    albumeListHandler();
 });
 
 //display folders
 foldersButton.addEventListener("click", () => {
     foldersContainer.classList.remove("hide");
+    isopen = true;
 });
 
 //hide playlist
 closeListButton.addEventListener("click", () => {
-    playlistContainer.classList.add("hide");
+    if (isopen == true) {
+        playlistContainer.classList.add("hide");
+        albumView = 1;
+        albumeListHandler();
+    } else {
+        playlistContainer.classList.add("hide");
+    }
+
 });
 
 //hide folders list
 closeFoldersButton.addEventListener("click", () => {
     foldersContainer.classList.add("hide");
+    isopen = false;
 });
 
 window.onload = () => {
